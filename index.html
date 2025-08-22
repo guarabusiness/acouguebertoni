@@ -1,0 +1,711 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Açougue Bertoni - Carne de Qualidade em Guarapari</title>
+  <meta name="description" content="Açougue Bertoni oferece carnes frescas, cortes especiais e atendimento de confiança em Guarapari-ES." />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      color: #333;
+      line-height: 1.6;
+      scroll-behavior: smooth;
+      overflow-x: hidden;
+    }
+
+    header {
+      background-color: #c81d25;
+      color: white;
+      padding: 1rem 2rem;
+      position: fixed;
+      width: 100%;
+      top: 0;
+      z-index: 1000;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      transition: background 0.3s;
+    }
+
+    header .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    header h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+    }
+
+    nav {
+      display: flex;
+      align-items: center;
+    }
+
+    nav ul {
+      display: flex;
+      list-style: none;
+      margin-right: 1rem;
+    }
+
+    nav ul li {
+      margin-left: 2rem;
+    }
+
+    nav ul li a {
+      color: white;
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.3s;
+    }
+
+    nav ul li a:hover {
+      color: #f8d486;
+    }
+
+    .menu-toggle {
+      display: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: white;
+    }
+
+    .sidebar {
+      position: fixed;
+      top: 0;
+      right: -100%;
+      width: 250px;
+      height: 100%;
+      background-color: #333;
+      padding: 2rem;
+      transition: right 0.3s ease;
+      z-index: 1001;
+    }
+
+    .sidebar.active {
+      right: 0;
+    }
+
+    .sidebar ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .sidebar ul li a {
+      color: white;
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 1.1rem;
+    }
+
+    .sidebar ul li a:hover {
+      color: #f8d486;
+    }
+
+    .close-btn {
+      font-size: 1.5rem;
+      color: white;
+      cursor: pointer;
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+    }
+
+    section {
+      padding: 100px 2rem;
+      min-height: 100vh;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .hero {
+      background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://imac.agr.br/wp-content/uploads/2023/12/Cortes-de-carne-bovina-conheca-o-MT-Steak-imac-GS2-Marketing-Digital.jpg') no-repeat center center/cover;
+      color: white;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .hero h2 {
+      font-size: 4rem;
+      margin-bottom: 1.5rem;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+
+    .hero p {
+      font-size: 1.4rem;
+      max-width: 800px;
+      margin-bottom: 2rem;
+    }
+
+    .btn {
+      background-color: #c81d25;
+      color: white;
+      padding: 14px 35px;
+      border: none;
+      border-radius: 50px;
+      font-weight: 600;
+      text-decoration: none;
+      display: inline-block;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+
+    .btn:hover {
+      background-color: #a0161e;
+      transform: translateY(-2px);
+    }
+
+    .section-title {
+      text-align: center;
+      margin-bottom: 3rem;
+      font-size: 2.5rem;
+      color: #c81d25;
+      position: relative;
+    }
+
+    .section-title::after {
+      content: '';
+      width: 80px;
+      height: 4px;
+      background: #c81d25;
+      position: absolute;
+      bottom: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .about, .mission, .faq {
+      background-color: #f9f9f9;
+      border-radius: 10px;
+    }
+
+    .about-content, .mission-content {
+      display: flex;
+      gap: 3rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .about-text, .mission-text {
+      flex: 1;
+      min-width: 300px;
+    }
+
+    .about-text h3, .mission-text h3 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      color: #c81d25;
+    }
+
+    .about-img, .location-img {
+      flex: 1;
+      min-width: 300px;
+      height: 450px;
+      background-size: cover;
+      background-position: center;
+      border-radius: 15px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+
+    .about-img {
+      background-image: url('https://images.unsplash.com/photo-1603133872878-684f208fb84b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80');
+    }
+
+    .location {
+      text-align: center;
+    }
+
+    .location iframe {
+      width: 100%;
+      height: 500px;
+      border: 0;
+      border-radius: 15px;
+      margin-top: 1.5rem;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    }
+
+    .hours {
+      margin-top: 1.5rem;
+      text-align: left;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .hours h3 {
+      font-size: 1.5rem;
+      color: #c81d25;
+      margin-bottom: 1rem;
+    }
+
+    .hours p {
+      margin: 0.5rem 0;
+    }
+
+    .testimonials {
+      background: linear-gradient(135deg, #c81d25 0%, #a0161e 100%);
+      color: white;
+      border-radius: 10px;
+    }
+
+    .testimonials .section-title {
+      color: white;
+    }
+
+    .testimonial-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2rem;
+      justify-content: center;
+    }
+
+    .testimonial {
+      background-color: rgba(255,255,255,0.15);
+      padding: 2rem;
+      border-radius: 15px;
+      max-width: 350px;
+      transition: transform 0.3s ease;
+    }
+
+    .testimonial:hover {
+      transform: translateY(-5px);
+    }
+
+    .testimonial p {
+      font-style: italic;
+      margin-bottom: 1rem;
+    }
+
+    .testimonial strong {
+      display: block;
+      margin-top: 0.5rem;
+    }
+
+    .faq-item {
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 1rem;
+    }
+
+    .faq-question {
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 1.2rem;
+      transition: color 0.3s;
+    }
+
+    .faq-question:hover {
+      color: #c81d25;
+    }
+
+    .faq-answer {
+      margin-top: 0.5rem;
+      display: none;
+    }
+
+    .faq-question::after {
+      content: '+';
+      font-weight: bold;
+    }
+
+    .faq-question.active::after {
+      content: '−';
+    }
+
+    footer {
+      background: linear-gradient(135deg, #333 0%, #1a1a1a 100%);
+      color: white;
+      padding: 3rem 2rem;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.5rem;
+    }
+
+    footer p {
+      margin: 0;
+      font-size: 1rem;
+    }
+
+    footer a {
+      color: #f8d486;
+      text-decoration: none;
+      transition: color 0.3s;
+    }
+
+    footer a:hover {
+      color: #fff;
+      text-decoration: underline;
+    }
+
+    .footer-content {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      gap: 2rem;
+      width: 100%;
+    }
+
+    .footer-section {
+      flex: 1;
+      min-width: 250px;
+      text-align: left;
+    }
+
+    .footer-section h3 {
+      font-size: 1.2rem;
+      margin-bottom: 1rem;
+      color: #f8d486;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .footer-section h3 i {
+      font-size: 1.3rem;
+    }
+
+    .social-links {
+      display: flex;
+      gap: 1rem;
+      justify-content: flex-start;
+    }
+
+    .social-links a {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      background-color: rgba(255,255,255,0.1);
+      border-radius: 50%;
+      font-size: 1.2rem;
+      color: #f8d486;
+      transition: all 0.3s ease;
+    }
+
+    .social-links a:hover {
+      background-color: #c81d25;
+      color: white;
+      transform: translateY(-3px);
+    }
+
+    .footer-bottom {
+      margin-top: 2rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      width: 100%;
+    }
+
+    @media (max-width: 768px) {
+      header .container {
+        justify-content: space-between;
+      }
+
+      nav ul {
+        display: none;
+      }
+
+      .menu-toggle {
+        display: block;
+      }
+
+      .hero h2 {
+        font-size: 2.5rem;
+      }
+
+      .hero p {
+        font-size: 1.1rem;
+      }
+
+      .about-content, .mission-content {
+        flex-direction: column;
+      }
+
+      .about-img, .location-img {
+        height: 300px;
+      }
+
+      .location iframe {
+        height: 400px;
+      }
+
+      .footer-content {
+        flex-direction: column;
+        text-align: center;
+      }
+      
+      .footer-section {
+        text-align: center;
+      }
+      
+      .social-links {
+        justify-content: center;
+      }
+      
+      .footer-section h3 {
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <h1>Açougue Bertoni</h1>
+      <nav>
+        <ul>
+          <li><a href="#inicio">Início</a></li>
+          <li><a href="#sobre">Sobre Nós</a></li>
+          <li><a href="#localizacao">Localização</a></li>
+          <li><a href="#missao">Missão</a></li>
+          <li><a href="#depoimentos">Depoimentos</a></li>
+          <li><a href="#faq">FAQ</a></li>
+        </ul>
+        <i class="fas fa-bars menu-toggle"></i>
+      </nav>
+    </div>
+  </header>
+
+  <div class="sidebar">
+    <i class="fas fa-times close-btn"></i>
+    <ul>
+      <li><a href="#inicio">Início</a></li>
+      <li><a href="#sobre">Sobre Nós</a></li>
+      <li><a href="#localizacao">Localização</a></li>
+      <li><a href="#missao">Missão</a></li>
+      <li><a href="#depoimentos">Depoimentos</a></li>
+      <li><a href="#faq">FAQ</a></li>
+    </ul>
+  </div>
+
+  <section id="inicio" class="hero">
+    <h2>Bem-vindo ao Açougue Bertoni</h2>
+    <p>Carne fresca, cortes especiais e atendimento de confiança em Guarapari-ES. Tradição e qualidade desde sempre.</p>
+    <a href="https://wa.me/5527999320951" class="btn" target="_blank">Fale Conosco no WhatsApp</a>
+  </section>
+
+  <section id="sobre" class="about">
+    <h2 class="section-title">Sobre Nós</h2>
+    <div class="about-content">
+      <div class="about-text">
+        <h3>Tradição e Qualidade desde 1985</h3>
+        <p>O Açougue Bertoni é referência em carnes de primeira qualidade em Guarapari. Com mais de 35 anos de história, oferecemos cortes especiais, atendimento personalizado e produtos sempre frescos.</p>
+        <p>Nosso compromisso é com a satisfação do cliente, selecionando os melhores fornecedores e mantendo padrões rigorosos de higiene e armazenamento.</p>
+        <p>Seja para o churrasco em família ou para o dia a dia, aqui você encontra o que há de melhor em carne bovina, suína, frango e produtos derivados.</p>
+      </div>
+      <div class="about-img"></div>
+    </div>
+  </section>
+
+  <section id="localizacao" class="location">
+    <h2 class="section-title">Nossa Localização</h2>
+    <p>Venha nos visitar! Estamos no coração do bairro Itapebussu.</p>
+    <p><strong>Endereço:</strong> R. Rio Grande do Sul, 556 - Itapebussu, Guarapari - ES, 29210-015</p>
+    <p><strong>Telefone:</strong> <a href="https://wa.me/5527999320951" style="color:#c81d25;">(27) 99932-0951</a></p>
+    <div class="hours">
+      <h3>Horários de Funcionamento</h3>
+      <p><strong>Segunda-feira:</strong> 08:00–19:30</p>
+      <p><strong>Terça-feira:</strong> 08:00–19:30</p>
+      <p><strong>Quarta-feira:</strong> 08:00–19:30</p>
+      <p><strong>Quinta-feira:</strong> 08:00–19:30</p>
+      <p><strong>Sexta-feira:</strong> 08:00–19:30</p>
+      <p><strong>Sábado:</strong> 08:00–19:30</p>
+      <p><strong>Domingo:</strong> 08:00–12:30</p>
+    </div>
+    <iframe 
+      src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3746.591535777592!2d-40.53022968507065!3d-20.70515098615744!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xb9c0b8b2e3b4d1%3A0x6b5c2b9b9b9b9b9b!2sR.%20Rio%20Grande%20do%20Sul%2C%20556%20-%20Itapebussu%2C%20Guarapari%20-%20ES%2C%2029210-015!5e0!3m2!1spt-BR!2sbr!4v1698791234567!5m2!1spt-BR!2sbr" 
+      allowfullscreen="" 
+      loading="lazy">
+    </iframe>
+  </section>
+
+  <section id="missao" class="mission">
+    <h2 class="section-title">Nossa Missão</h2>
+    <div class="mission-content">
+      <div class="mission-text">
+        <h3>Qualidade, Tradição e Confiança</h3>
+        <p>Nossa missão é fornecer produtos cárneos de altíssima qualidade, com transparência e respeito ao consumidor. Queremos ser o açougue de confiança da sua família, oferecendo atendimento humanizado e soluções para todas as suas necessidades alimentares.</p>
+        <p>Valorizamos a tradição do bom atendimento e a evolução contínua em processos, higiene e atendimento ao cliente.</p>
+      </div>
+      <div class="about-img" style="background-image: url('https://images.unsplash.com/photo-1568901346375-23c9450c58cd?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80');"></div>
+    </div>
+  </section>
+
+  <section id="depoimentos" class="testimonials">
+    <h2 class="section-title">O que Nossos Clientes Dizem</h2>
+    <div class="testimonial-list">
+      <div class="testimonial">
+        <p>"A melhor carne de Guarapari! Compro há mais de 10 anos e nunca me decepcionei. O atendimento é sempre atencioso."</p>
+        <strong>— Carlos M., Itapebussu</strong>
+      </div>
+      <div class="testimonial">
+        <p>"O cupim é sensacional! Perfeito para churrasco em família. Recomendo demais!"</p>
+        <strong>— Ana L., Praia do Morro</strong>
+      </div>
+      <div class="testimonial">
+        <p>"Chego sempre cedo para garantir os melhores cortes. Qualidade acima da média!"</p>
+        <strong>— Roberto S., Enseada Azul</strong>
+      </div>
+    </div>
+  </section>
+
+  <section id="faq" class="faq">
+    <h2 class="section-title">Perguntas Frequentes</h2>
+    <div class="faq-list">
+      <div class="faq-item">
+        <div class="faq-question">O açougue faz entrega?</div>
+        <div class="faq-answer">
+          <p>Sim! Fazemos entregas em bairros selecionados de Guarapari. Consulte nosso atendente pelo WhatsApp.</p>
+        </div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-question">Quais são os horários de funcionamento?</div>
+        <div class="faq-answer">
+          <p>Funcionamos de segunda a sábado, das 08:00 às 19:30. Domingos, das 08:00 às 12:30.</p>
+        </div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-question">Vocês vendem produtos congelados?</div>
+        <div class="faq-answer">
+          <p>Sim, temos uma linha de carnes congeladas, linguiças artesanais e produtos prontos para assar.</p>
+        </div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-question">Aceitam cartões?</div>
+        <div class="faq-answer">
+          <p>Sim, aceitamos cartões de débito, crédito e PIX.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="footer-content">
+      <div class="footer-section">
+        <h3><i class="fas fa-store"></i> Açougue Bertoni</h3>
+        <p>Tradição e qualidade em carnes desde 1985. Seu açougue de confiança em Guarapari.</p>
+      </div>
+      <div class="footer-section">
+        <h3><i class="fas fa-map-marker-alt"></i> Endereço</h3>
+        <p>R. Rio Grande do Sul, 556 - Itapebussu, Guarapari - ES, 29210-015</p>
+      </div>
+      <div class="footer-section">
+        <h3><i class="fas fa-clock"></i> Horário</h3>
+        <p>Seg a Sáb: 08:00–19:30</p>
+        <p>Domingo: 08:00–12:30</p>
+      </div>
+      <div class="footer-section">
+        <h3><i class="fas fa-phone-alt"></i> Contato</h3>
+        <p><a href="https://wa.me/5527999320951">(27) 99932-0951</a></p>
+        <div class="social-links">
+          <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+          <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+          <a href="https://wa.me/5527999320951" aria-label="WhatsApp"><i class="fab fa-whatsapp"></i></a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2025 Açougue Bertoni. Todos os direitos reservados.</p>
+    </div>
+  </footer>
+
+  <script>
+    const menuToggle = document.querySelector('.menu-toggle');
+    const sidebar = document.querySelector('.sidebar');
+    const closeBtn = document.querySelector('.close-btn');
+
+    menuToggle.addEventListener('click', () => {
+      sidebar.classList.toggle('active');
+    });
+
+    closeBtn.addEventListener('click', () => {
+      sidebar.classList.remove('active');
+    });
+
+    document.querySelectorAll('.sidebar ul li a').forEach(link => {
+      link.addEventListener('click', () => {
+        sidebar.classList.remove('active');
+      });
+    });
+
+    document.querySelectorAll('.faq-question').forEach(question => {
+      question.addEventListener('click', () => {
+        const answer = question.nextElementSibling;
+        const isActive = question.classList.contains('active');
+
+        document.querySelectorAll('.faq-question').forEach(q => {
+          q.classList.remove('active');
+          q.nextElementSibling.style.display = 'none';
+        });
+
+        if (!isActive) {
+          question.classList.add('active');
+          answer.style.display = 'block';
+        }
+      });
+    });
+  </script>
+</body>
+</html>
